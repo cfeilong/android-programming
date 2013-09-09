@@ -2,8 +2,10 @@ package com.bignerdranch.android.criminalintent;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -17,12 +19,15 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
 
 public class CrimeFragment extends Fragment {
 	
 	public final static String EXTRA_CRIME_ID = "com.bignerdranch.android.criminalintent.crime_id";
+	private final static int REQUEST_DATE = 0;	
+	public final static String DATE_PICKER_DIALOG = "date_dialog";
 	private Crime mCrime;
 	private EditText mEditText;
 	private CheckBox mSolved;
@@ -83,19 +88,22 @@ public class CrimeFragment extends Fragment {
 			
 		});
 		
-		String format = "E, MMM dd, yyyy";
-		SimpleDateFormat df = new SimpleDateFormat(format, Locale.US);
+		
 		mDate = (Button)v.findViewById(R.id.crime_date);
-		mDate.setText(df.format(mCrime.getDate()));
-		mDate.setEnabled(false);
-//		mDate.setOnClickListener(new View.OnClickListener() {
-//			
-//			@Override
-//			public void onClick(View v) {
-//				// TODO Auto-generated method stub
-//				
-//			}
-//		});
+		updateDate();
+	
+		mDate.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				FragmentManager fm = getFragmentManager();
+				DatePickerFragment datePickerFragment = DatePickerFragment.newInstance(mCrime.getDate());
+				datePickerFragment.setTargetFragment(CrimeFragment.this, REQUEST_DATE);
+				
+				datePickerFragment.show(fm, DATE_PICKER_DIALOG);
+			}
+		});
 		
 		
 		mSolved = (CheckBox)v.findViewById(R.id.crime_solved);
@@ -117,6 +125,23 @@ public class CrimeFragment extends Fragment {
 		getActivity().setResult(Activity.RESULT_OK, null);
 	}
 
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// TODO Auto-generated method stub
+		if(resultCode != android.R.string.ok) return;
+		if(requestCode ==  REQUEST_DATE){
+			Date date = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
+			mCrime.setDate(date);
+			updateDate();
+		}
+	}
+
+	
+	private void updateDate(){
+		String format = "E, MMM dd, yyyy";
+		SimpleDateFormat df = new SimpleDateFormat(format, Locale.US);
+		mDate.setText(df.format(mCrime.getDate()));
+	}
 
 	
 
